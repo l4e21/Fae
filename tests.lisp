@@ -39,6 +39,29 @@
   (fuzzy-members (fuzzy-union #'zero-ness (compl #'zero-ness))
                  (fset:convert 'fset:wb-set (range -4 4 0.5))))
 
+
+(serapeum:-> hotness (number) fuzzy-cons)
+(defun hotness (x)
+  (fuzzy-cons x
+              (cond
+                ((>= x 50.0)
+                 1.0)
+                ((>= x 30.0)
+                 (/ (- 50.0 x) 20.0))
+                (t
+                 0.0))))
+
+(serapeum:-> coldness (number) fuzzy-cons)
+(defun coldness (x)
+  (fuzzy-cons x
+              (cond
+                ((>= x 10.0)
+                 0.0)
+                ((>= x 0.0)
+                 (- 1.0 (/ (- 10.0 x) 10.0)))
+                (t
+                 1.0))))
+
 (fiveam:test compilation
   (fiveam:is (equalp
               (fset:empty-set)
@@ -57,4 +80,8 @@
                 (scalar-cardinality (fuzzy-members #'more-than-zero-ish (fset:set -1 0 1)))))
   (fiveam:is (= 0.25
                 (relative-cardinality (fuzzy-members #'more-than-zero-ish (fset:set -1 0 1))
-                                      '(-1 0 1)))))
+                                      '(-1 0 1))))
+  (fiveam:is (= 0.0
+                (funcall (hamming-distance #'coldness #'coldness) (range -50 50))))
+  (fiveam:is (equalp (crisp-members (simple-difference #'example-member-func #'example-member-func) (fset:set 1 'hi 2))
+                     (fset:empty-set))))

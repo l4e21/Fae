@@ -164,7 +164,37 @@
 
 (serapeum:-> bounded-difference ((mu-fn t) (mu-fn t)) (mu-fn t))
 (defun bounded-difference (fn1 fn2)
+  "Difference between two membership functions bounded by 0"
   (fuzzy-union #'null-mu (fuzzy-minus fn1 fn2)))
+
+
+(serapeum:-> minkowski-distance ((mu-fn t) (mu-fn t) integer) function)
+(defun minkowksi-distance (fn1 fn2 omega)
+  (lambda (domain)
+    (flet ((aux (x)
+             (expt x (/ 1 omega))))
+      (serapeum:assure single-float
+        (serapeum:~>> (fset:convert 'fset:wb-set domain)
+                      (fset:image (lambda (x)
+                                    (expt
+                                     (serapeum:~>> x
+                                                   (funcall (fuzzy-minus fn1 fn2))
+                                                   (fuzzy-cons-weight)
+                                                   (abs))
+                                     omega)))
+                      (fset:reduce #'+)
+                      (aux))))))
+
+(serapeum:-> hamming-distance ((mu-fn t) (mu-fn t)) function)
+(defun hamming-distance (fn1 fn2)
+  (serapeum:assure function
+    (minkowski-distance fn1 fn2 1)))
+
+(serapeum:-> euler-distance ((mu-fn t) (mu-fn t)) function)
+(defun euler-distance (fn1 fn2)
+  (serapeum:assure function
+    (minkowski-distance fn1 fn2 2)))
+
 
 ;; So perhaps if were doing this through an object oriented approach, we could
 ;; represent fuzzy sets to the user as a kind of object, struct, or construct
@@ -173,7 +203,7 @@
 ;; It's interesting to note how the concept of sets doesn't require any calculations
 ;; on the members of the set to calculate the members of new sets, but simply requires
 ;; composition of membership functions. This makes perfect sense mathematically once
-;; you think about it!
+;; you think about it! Monoids!!!!
 
 (serapeum:-> fuzzy-analysis ((mu-fn t) list) fset:wb-map)
 (defun fuzzy-analysis (func domain)
