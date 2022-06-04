@@ -13,10 +13,48 @@
       (fuzzy-cons x 1.0)
       (fuzzy-cons x 0.0)))
 
+(serapeum:-> zero-ness (number) fuzzy-cons)
+(defun zero-ness (x)
+  (serapeum:assure fuzzy-cons
+    (fuzzy-cons x (/ 1.0 (serapeum:~> x (abs) (+ 1) (expt 2))))))
+
+(serapeum:-> more-than-zero-ish (number) fuzzy-cons)
+(defun more-than-zero-ish (x)
+  (serapeum:assure fuzzy-cons
+    (fuzzy-cons x (if (<= x 0)
+                      0.0
+                      (fuzzy-cons-weight (funcall (compl #'zero-ness) x))))))
+
+(serapeum:-> more-than-one-ish (number) fuzzy-cons)
+(defun more-than-one-ish (x)
+  (serapeum:assure fuzzy-cons
+    (fuzzy-cons x (if (<= x 1)
+                      0.0
+                      (- (fuzzy-cons-weight (funcall (compl #'zero-ness) x)) 0.01)))))
+
+(serapeum:-> example-2-set () fuzzy-set)
+(defun example-2-set ()
+  "Useage like this! This one finds the union of numbers that show 'zero-ness'
+   but also ones that display 'non-zero-ness'"
+  (fuzzy-members (fuzzy-union #'zero-ness (compl #'zero-ness))
+                 (fset:convert 'fset:wb-set (range -4 4 0.5))))
+
 (fiveam:test compilation
-  (fiveam:is (not
-              (fuzzy-members (fuzzy-intersection #'example-member-func (comp #'example-member-func))
-                             '(1 hi 2))))
-  (fiveam:is (set=
-              (crisp-members (fuzzy-union #'example-member-func (comp #'example-member-func)) '(1 2 3))
-              '(3 2 1))))
+  (fiveam:is (equalp
+              (fset:empty-set)
+              (crisp-members
+               (fuzzy-intersection #'example-member-func (compl #'example-member-func))
+               (fset:set 1 'hi 2))))
+  (fiveam:is (equalp
+              (crisp-members
+               (fuzzy-union #'example-member-func (compl #'example-member-func)) (fset:set 1 2 3))
+              (fset:set 3 2 1)))
+  (fiveam:is (fuzzy-subset?
+              #'more-than-one-ish
+              #'more-than-zero-ish
+              (range -4 4 0.5)))
+  (fiveam:is (= 0.75
+                (scalar-cardinality (fuzzy-members #'more-than-zero-ish (fset:set -1 0 1)))))
+  (fiveam:is (= 0.25
+                (relative-cardinality (fuzzy-members #'more-than-zero-ish (fset:set -1 0 1))
+                                      '(-1 0 1)))))
