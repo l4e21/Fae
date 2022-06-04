@@ -37,21 +37,20 @@
 (serapeum:-> fuzzy-set-p (fset:wb-set) boolean)
 (defun fuzzy-set-p (xs)
   (and
-   (every (lambda (x) (typep x 'fuzzy-cons)) (fset:convert 'list xs))
-   t))
+   (every (lambda (x) (typep x 'fuzzy-cons)) (fset:convert 'list xs))))
 
-(defun correct-fuzzy-set (s)
-  (fset:reduce
-   (lambda (acc x)
-     (if (some (lambda (y) (and
-                       (= (fuzzy-cons-weight y) (fuzzy-cons-weight x))
-                       (equalp (fuzzy-cons-value y) (fuzzy-cons-value x))))
-               (fset:convert 'list acc))
-         acc
-         (fset:union (fset:set x) acc)))
-   s
-   :initial-value
-   (fset:set (fset:arb s))))
+;; (defun correct-fuzzy-set (s)
+;;   (fset:reduce
+;;    (lambda (acc x)
+;;      (if (some (lambda (y) (and
+;;                        (= (fuzzy-cons-weight y) (fuzzy-cons-weight x))
+;;                        (equalp (fuzzy-cons-value y) (fuzzy-cons-value x))))
+;;                (fset:convert 'list acc))
+;;          acc
+;;          (fset:union (fset:set x) acc)))
+;;    s
+;;    :initial-value
+;;    (fset:set (fset:arb s))))
 
 (serapeum:-> fuzzy-members ((mu-fn t) fset:wb-set) fuzzy-set)
 (defun fuzzy-members (func xs)
