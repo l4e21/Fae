@@ -39,18 +39,13 @@
   (and
    (every (lambda (x) (typep x 'fuzzy-cons)) (fset:convert 'list xs))))
 
-;; (defun correct-fuzzy-set (s)
-;;   (fset:reduce
-;;    (lambda (acc x)
-;;      (if (some (lambda (y) (and
-;;                        (= (fuzzy-cons-weight y) (fuzzy-cons-weight x))
-;;                        (equalp (fuzzy-cons-value y) (fuzzy-cons-value x))))
-;;                (fset:convert 'list acc))
-;;          acc
-;;          (fset:union (fset:set x) acc)))
-;;    s
-;;    :initial-value
-;;    (fset:set (fset:arb s))))
+(defmethod fset:compare ((a fuzzy-cons) (b fuzzy-cons))
+  "This needs to be done because classes use eql by default in FSet"
+  (fset:compare (list (fuzzy-cons-value a)
+                      (fuzzy-cons-weight a))
+                (list (fuzzy-cons-value b)
+                      (fuzzy-cons-weight b))))
+
 
 (serapeum:-> fuzzy-members ((mu-fn t) fset:wb-set) fuzzy-set)
 (defun fuzzy-members (func xs)
@@ -146,6 +141,30 @@
                   (fuzzy-cons (scalar-cardinality (alpha-cut s (fuzzy-cons-weight x)))
                               (fuzzy-cons-weight x))) s)))
 
+(serapeum:-> simple-disjoint-sum ((mu-fn t) (mu-fn t)) (mu-fn t))
+(defun simple-disjoint-sum (fn1 fn2)
+  (fuzzy-union (fuzzy-intersection fn1 (compl fn2))
+               (fuzzy-intersection fn2 (compl fn1))))
+
+(serapeum:-> simple-difference ((mu-fn t) (mu-fn t)) (mu-fn t))
+(defun simple-difference (fn1 fn2)
+  (fuzzy-intersection fn1 (compl fn2)))
+
+(serapeum:-> null-mu (t) fuzzy-cons)
+(defun null-mu (x)
+  (serapeum:assure fuzzy-cons
+    (fuzzy-cons x 0.0)))
+
+(serapeum:-> fuzzy-minus ((mu-fn t) (mu-fn t)) (mu-fn t))
+(defun fuzzy-minus (fn1 fn2)
+  (lambda (x)
+    (fuzzy-cons x
+     (- (fuzzy-cons-weight (funcall fn1 x))
+        (fuzzy-cons-weight (funcall fn2 x))))))
+
+(serapeum:-> bounded-difference ((mu-fn t) (mu-fn t)) (mu-fn t))
+(defun bounded-difference (fn1 fn2)
+  (fuzzy-union #'null-mu (fuzzy-minus fn1 fn2)))
 
 ;; So perhaps if were doing this through an object oriented approach, we could
 ;; represent fuzzy sets to the user as a kind of object, struct, or construct
@@ -176,4 +195,3 @@
                 ('domain domain)
                 ('mu func)))))
 
-;; FSet kind of sucks for this sycamore would be better.
