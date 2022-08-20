@@ -1,7 +1,6 @@
 (in-package #:fuzzy)
 
 (fiveam:def-suite fuzzy-suite)
-
 (fiveam:in-suite fuzzy-suite)
 
 (defun test-quasi ()
@@ -85,3 +84,134 @@
                 (funcall (hamming-distance #'coldness #'coldness) (range -50 50))))
   (fiveam:is (equalp (crisp-members (simple-difference #'example-member-func #'example-member-func) (fset:set 1 'hi 2))
                      (fset:empty-set))))
+
+(fiveam:test match
+  (fiveam:is (= 1 1)))
+
+(fiveam:test db
+  (let* ((crisp-mu
+           (lambda (x) (fuzzy-cons x 1.0)))
+         (female-mu
+           (lambda (x)
+             (case (fset:@ x :gender)
+               ("Female"
+                (fuzzy-cons x
+                            1.0))
+               ("Androgynous"
+                (fuzzy-cons x
+                            0.6))
+               ("Male"
+                (fuzzy-cons x
+                            0.0))
+               (otherwise
+                (fuzzy-cons x
+                            0.0)))))
+         (parent-mu
+           (lambda (x)
+             (if (fset:empty? (fset:@ x :children))
+                 (fuzzy-cons x 0.0)
+                 (fuzzy-cons x 1.0))))
+         (big-country-mu
+           (lambda (x)
+             (let ((land-mass (fset:@ x :land-mass/km2)))
+               (if (not land-mass)
+                   (fuzzy-cons x 0.0)
+                   (cond
+                     ((< land-mass 1000)
+                      (fuzzy-cons x 0.0))
+                     ((< land-mass 500000)
+                      (fuzzy-cons x (float (/ land-mass 500000))))
+                     (t
+                      (fuzzy-cons x 1.0)))))))
+         (hot-country-mu
+           (lambda (x)
+             (let ((temp (fset:@ x :avg-temp/c)))
+               (if (not temp)
+                   (fuzzy-cons x 0.0)
+                   (cond
+                     ((< temp 0)
+                      (fuzzy-cons x 0.0))
+                     ((< temp 26)
+                      (fuzzy-cons x (float (/ temp 26))))
+                     (t
+                      (fuzzy-cons x 1.0)))))))
+         (example-db (fset:map
+                      (:domain
+                       (fset:set
+                        (fset:map
+                         (:id "Jane")
+                         (:gender "Female")
+                         (:children '("John")))
+                        (fset:map
+                         (:id "John")
+                         (:gender "Androgynous"))
+                        (fset:map
+                         (:id "Steve")
+                         (:gender "Male")
+                         (:children '("John")))
+                        (fset:map
+                         (:id "Malta")
+                         (:avg-temp/c 27)
+                         (:land-mass/km2 316))
+                        (fset:map
+                         (:id "Britain")
+                         (:avg-temp/c 8)
+                         (:land-mass/km2 209331))
+                        (fset:map
+                         (:id "Chad")
+                         (:avg-temp/c 27.9)
+                         (:land-mass/km2 1284000))))
+                      (:tables
+                       (list (fset:map
+                              (:title 'Crisp)
+                              (:mu crisp-mu))
+                             (fset:map
+                              (:title 'Female)
+                              (:mu female-mu))
+                             (fset:map
+                              (:title 'Parent)
+                              (:mu parent-mu))
+                             (fset:map
+                              (:title 'Big-Country)
+                              (:mu big-country-mu))
+                             (fset:map
+                              (:title 'Hot-Country)
+                              (:mu hot-country-mu)))))))
+    
+    (fiveam:is (= 6 (fset:size (fset:@ example-db :domain))))
+    (fiveam:is (= 5 (length (fset:@ example-db :tables))))
+    (fiveam:is (equal crisp-mu
+                      (table-lookup 'Crisp example-db)))
+    (fiveam:is (equal female-mu
+                      (interpret-rule 'Female example-db)))
+    (fiveam:is (= 1.6
+                  (scalar-cardinality
+                   (evaluate-rule
+                    '(and Female Crisp)
+                    example-db))))
+    (fiveam:is (= 6.0
+                  (scalar-cardinality
+                   (evaluate-rule
+                    '(or Female Crisp)
+                    example-db))))
+    (fiveam:is (= 1.0
+                  (scalar-cardinality
+                   (evaluate-rule
+                    '(and Female Parent)
+                    example-db))))
+    (fiveam:is (= 1.0 (scalar-cardinality
+                       (evaluate-rule
+                        '(do
+                          (rule FemParent (and Female Parent))
+                          FemParent)
+                        example-db))))
+    (fiveam:is (equal
+                ""
+                (strong-alpha-cut
+                 (evaluate-rule
+                  '(do
+                    (rule Big-And-Hot
+                     (and Hot-Country Big-Country))
+                    Big-And-Hot)
+                  example-db)
+                 0.0)))))

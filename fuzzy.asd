@@ -9,4 +9,6 @@
   :depends-on (#:fiveam #:alexandria #:serapeum #:trivia #:fset)
   :components ((:file "package")
                (:file "sets")
+               (:file "match")
+               (:file "db")
                (:file "tests")))

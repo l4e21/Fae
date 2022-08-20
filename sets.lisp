@@ -47,6 +47,7 @@
                       (fuzzy-cons-weight b))))
 
 
+
 (serapeum:-> fuzzy-members ((mu-fn t) fset:wb-set) fuzzy-set)
 (defun fuzzy-members (func xs)
   "Calculate membership function over domain"
@@ -73,6 +74,8 @@
 (defun crisp-members (func xs)
   (fuzzy-support (fuzzy-members func xs)))
 
+
+
 (serapeum:-> compl ((mu-fn t)) (mu-fn t))
 (defun compl (func)
   "Complementary membership function"
@@ -91,6 +94,10 @@
           (fuzzy-cons v1 w1)
           (fuzzy-cons v2 w2)))))
 
+(serapeum:-> fuzzy-and (t) t)
+(defun fuzzy-and (&rest fns)
+  (reduce #'fuzzy-intersection fns))
+
 (serapeum:-> fuzzy-union ((mu-fn t) (mu-fn t)) (mu-fn t))
 (defun fuzzy-union (fn1 fn2)
   "Takes the maximum mu"
@@ -100,6 +107,12 @@
       (if (> w1 w2)
           (fuzzy-cons v1 w1)
           (fuzzy-cons v2 w2)))))
+
+(serapeum:-> fuzzy-or (&rest (mu-fn t)) (mu-fn t))
+(defun fuzzy-or (&rest fns)
+  (reduce #'fuzzy-union fns))
+
+
 
 (serapeum:-> height (fuzzy-set) single-float)
 (defun height (s)
@@ -125,6 +138,7 @@
 (defun scalar-cardinality (s)
   (serapeum:assure single-float
     (serapeum:~>> s
+                  (fset:convert 'list)
                   (fset:image #'fuzzy-cons-weight)
                   (fset:reduce #'+))))
 
@@ -169,7 +183,7 @@
 
 
 (serapeum:-> minkowski-distance ((mu-fn t) (mu-fn t) integer) function)
-(defun minkowksi-distance (fn1 fn2 omega)
+(defun minkowski-distance (fn1 fn2 omega)
   (lambda (domain)
     (flet ((aux (x)
              (expt x (/ 1 omega))))
