@@ -17,16 +17,27 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 
 ## Documentation
 `(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true.
+
 `(load filename)` load domain data from a lisp file 
+
 `(save filename)` write domain data to a file
+
 `(rule name body)` is used to define new rules via combinations of tables
+
 `(table name body)` is used to define a new table programmatically (allowing you to break into Lisp to define a membership function directly). 
+
 `(attr keyword)` makes a crisp membership function for an attribute of an entity (accessed by the relevant symbol)
+
 `(tables)` displays tables
+
 `(cut r)` and `(s-cut r)` are the alpha-cut and strong-alpha-cut of an evaluated result
+
 `(eval fn)` is used to evaluate tables over the domain
+
 `(delete)` deletes from the domain
+
 `(mutate)` mutates the domain
+
 `(undo)` and `(redo)` do what they sound like
 
 ## License
