@@ -1,6 +1,6 @@
 # Fae - The Fuzzy Analysis Engine
 
-Fae is constituted by a fuzzy-set library, and a engine + query language which leverage that library in order to allow the user to make declarative tabular databases and then run analysis on the database in real time via a REPL.
+Fae is constituted by a fuzzy-set library, and a engine + query language which leverage that library in order to allow the user to make declarative tabular databases and then run fuzzy analysis on the database in real time via a REPL.
 
 ## Defining Features
 - Tables are simply titled fuzzy-membership functions (concepts)
@@ -14,6 +14,7 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 - Cascading
 - Error handling (let's leverage the excellent CL condition system please!)
 - Data simulations
+- Bitemporal domain data
 
 ## Documentation
 `(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true. Entities are maps/plists
