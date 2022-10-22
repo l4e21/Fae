@@ -41,6 +41,11 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 
 `(undo)` and `(redo)` do what they sound like
 
+## Learn More
+Fuzzy Set Theory Lectures By Prof S Chakraverty  https://www.youtube.com/watch?v=oWqXwCEfY78&list=PLjZ9ULh2Ff9FWvv-DiZHP6RN0kMr_4aW4
+
+"BayesDB: Query the Probable Implications of Data" by Richard Tibbetts  https://www.youtube.com/watch?v=7_m7JCLKmTY
+
 ## License
 
 MIT License
