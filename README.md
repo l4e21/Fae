@@ -34,9 +34,9 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 
 `(eval fn)` is used to evaluate tables over the domain
 
-`(delete)` deletes from the domain
+`(delete table/keyword)` deletes from the domain via applying a table and deleting those resultt or deleting via an attribute keyword
 
-`(mutate)` mutates the domain
+`(mutate table/keyword)` mutates the domain via applying a table and keeping the results or by an attribute keyword
 
 `(undo)` and `(redo)` do what they sound like
 
