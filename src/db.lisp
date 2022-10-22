@@ -9,6 +9,10 @@
 (defun ff (xs)
   (first (first xs)))
 
+(serapeum:-> get-key (keyword) function)
+(defun get-key (kw)
+  (lambda (xmap) (fset:@ xmap kw)))
+
 (serapeum:-> keys (fset:wb-map) fset:wb-set)
 (defun keys (xmap)
   (serapeum:assure fset:wb-set
@@ -116,250 +120,20 @@
   (fset:map (:result result)
             (:env env)))
 
-;; Interpreter
-(serapeum:-> interpret-rule (t t) result-state)
-(defun interpret-rule (rule env)
-  (cond
-    ;; If it's a symbol look up the membership function
-    ((symbolp rule)
-     (make-result
-      (table-lookup rule (ff env))
-      env))
 
-    ;; If number just return the number
-    ((numberp rule)
-     (make-result rule env))
+(deftype fail-state ()
+  `(satisfies fail-state-p))
 
-    ;; Show tables
-    ((equal (car rule) 'tables)
-     (make-result
-      (fset:@ (ff env) :tables)
-      env))
+(serapeum:-> fail-state-p (fset:wb-map) boolean)
+(defun fail-state-p (state)
+  (and
+   (fset:@ state :reason)
+   (fset:@ state :env)
+   (fset:@ state :result)))
 
-    ;; Show domain : TODO Cacheing
-    ((equal (car rule) 'domain)
-     (make-result
-      (fset:@ (ff env) :domain)
-      env))
-       
-    ;; Print a result
-    ((equal (car rule) 'eval)
-     (let ((result (evaluate-rule (cadr rule) env)))
-       (make-result
-        result
-        env)))
-    
-    ;; Cut results and print
-    ((equal (car rule) 'cut)
-     (let ((result (alpha-cut (evaluate-rule (cadr rule) env) (caddr rule))))
-       (make-result
-        result
-        env)))
-    
-    ;; Strong Cut results and print
-    ((equal (car rule) 's-cut)
-     (let ((result (strong-alpha-cut (evaluate-rule (cadr rule) env) (caddr rule))))
-       (make-result
-        result
-        env)))
-    
-    ;; And
-    ((equal (car rule) 'and)
-     (make-result
-      (apply #'fuzzy-and (mapcar (lambda (r)
-                                   (fset:@ (interpret-rule r env) :result))
-                                 (rest rule)))
-      env))
-    ;; Or
-    ((equal (car rule) 'or)
-     (make-result
-      (apply #'fuzzy-or (mapcar (lambda (r)
-                                  (fset:@ (interpret-rule r env) :result))
-                                (rest rule)))
-      env))
-    ;; Not
-    ((equal (car rule) 'not)
-     (make-result (compl (fset:@
-                          (interpret-rule (cadr rule) env)
-                          :result))
-                  env))
-    
-    ;; If it defines a rule, append a new table
-    ;; The membership function will be the interpretation of the body
-    ((equal (car rule) 'rule)
-     (make-result
-      (cadr rule)
-      (cons
-       (list
-        (fset:map
-         (:domain (fset:@ (ff env) :domain))
-         (:tables (cons
-                   (fset:map
-                    (:title (cadr rule))
-                    (:mu (fset:@
-                          (interpret-rule
-                           (caddr rule)
-                           env) :result)))
-                   (fset:@ (ff env) :tables)))))
-       env)))
-    
-    ;; Sequential statements
-    ((equal (car rule) 'do)
-     (reduce
-      (lambda (acc expression)
-        (interpret-rule expression (fset:@ acc :env)))
-      (cdr rule)
-      :initial-value (make-result 't env)))
-
-    ;; Breaking into lisp to define attributes
-    ((equal (car rule) 'table)
-     (make-result
-      (cadr rule)
-      (cons
-       (list
-        (fset:map
-         (:domain (fset:@ (ff env) :domain))
-         (:tables (cons
-                   (make-table (cadr rule) (eval (caddr rule)))
-                   (fset:@ (ff env) :tables)))))
-       env)))
-    
-    ;; Define an attribute
-    ((equal (car rule) 'attr)
-     (make-result
-      't
-      (cons
-       (list
-        (fset:map
-         (:domain (fset:@ (ff env) :domain))
-         (:tables (cons (attribute (cadr rule))
-                        (fset:@ (ff env) :tables)))))
-       env)))
-    
-
-    ;; Delete entities by a certain reasoning
-    ;; Either attribute must be a certain value
-    ;; Or a rule must have a certain cut
-    ((equal (car rule) 'delete)
-     (if (typep (cadr rule) 'keyword)
-         (make-result
-          't
-          (cons
-           (list
-            (fset:map
-             (:domain (fset:filter
-                       (lambda (x) (not (equal (fset:@ x (cadr rule))
-                                          (caddr rule))))
-                       (fset:@ (ff env) :domain)))
-             (:tables (fset:@ (ff env) :tables))))
-           env))
-         (make-result
-          't
-          (cons
-           (list
-            (fset:map
-             (:domain
-              (fset:set-difference
-               (fset:@ (ff env) :domain)
-               (fset:image
-                #'fuzzy-cons-value
-                (strong-alpha-cut
-                 (evaluate-rule (cadr rule) env)
-                 (caddr rule)))))
-             (:tables (fset:@ (ff env) :tables))))
-           env))))
-
-    ;; Mutate
-    ((equal (car rule) 'mutate)
-     (if (typep (cadr rule) 'keyword)
-         (make-result
-          't
-          (cons
-           (list
-            (fset:map
-             (:domain (fset:filter
-                       (lambda (x) (equal (fset:@ x (cadr rule))
-                                     (caddr rule)))
-                       (fset:@ (ff env) :domain)))
-             (:tables (fset:@ (ff env) :tables))))
-           env))
-         (make-result
-          't
-          (cons (list
-                 (fset:map
-                  (:domain
-                   (fset:image
-                    #'fuzzy-cons-value
-                    (strong-alpha-cut
-                     (evaluate-rule (cadr rule) env)
-                     (caddr rule))))
-                  (:tables (fset:@ (ff env) :tables))))
-                env))))
-
-    ;; Save domain data in file
-    ((equal (car rule) 'save)
-     (store-domain (ff env) (cadr rule))
-     (make-result
-      't
-      env))
-
-    ;; Load domain data from file
-    ((equal (car rule) 'load)
-     (make-result
-      't                                
-      (cons
-       (list
-        (load-into-domain (ff env) (cadr rule)))
-       env)))
-
-    ;; Undo env history
-    ((equal (car rule) 'undo)
-     (if (cadr env)
-         (make-result
-          't
-          (cons (cadr env)
-                env))
-         (make-result
-          'fail
-          env))
-     ;; go to last point in the history
-     )
-
-    ((equal (car rule) 'redo)
-     (if (cadr env)
-         (make-result
-          't
-          (rest env))
-         (make-result
-          'fail
-          env))
-     )
-    
-    (t                                  ;TODO fail reasons
-     (make-result 'fail env))))
-
-(serapeum:-> evaluate-rule (t t) t)
-(defun evaluate-rule (rule env)
-  (fset:image
-   (fset:@ (interpret-rule rule env) :result)
-   (fset:@ (ff env) :domain)))
-
-
-(defun fae (env)
-  (let* ((user-input (progn
-                       (format t "FAE> ")
-                       (read)))
-         (state (interpret-rule user-input env)))
-    (pprint (fset:@ state :result))
-    (terpri)
-    (fae (fset:@ state :env))))
-
-
-(defun init! (&optional (script nil))
-  (if script
-      "TODO"
-      (progn
-        (pprint "FAE (Fuzzy Analysis Engine) V0.01")
-        (terpri)
-        (fae (make-env (make-db))))))
-
+(serapeum:-> make-fail (t t t) fail-state)
+(defun make-fail (env reason)
+  (fset:map
+   (:result 'fail)
+   (:env env)
+   (:reason reason)))

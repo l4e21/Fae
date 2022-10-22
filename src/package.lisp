@@ -3,7 +3,11 @@
 (defpackage :fae
   (:use #:cl)
   (:export #:range
+           #:fuzzy-set
+           #:fuzzy-cons
+           #:fuzzy-cons-weight
            #:fuzzy-set-p
+           #:crisp-members
            #:fuzzy-members
            #:strong-alpha-cut
            #:alpha-cut
