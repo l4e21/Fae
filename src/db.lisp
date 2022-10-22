@@ -131,7 +131,7 @@
    (fset:@ state :env)
    (fset:@ state :result)))
 
-(serapeum:-> make-fail (t t t) fail-state)
+(serapeum:-> make-fail (t t) fail-state)
 (defun make-fail (env reason)
   (fset:map
    (:result 'fail)
