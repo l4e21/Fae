@@ -1,4 +1,5 @@
 ;;;; package.lisp
 
 (defpackage #:fuzzy
-  (:use #:cl))
+  (:use #:cl)
+  (:export #:fuzzy-suite))

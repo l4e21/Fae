@@ -135,76 +135,119 @@
                       (fuzzy-cons x (float (/ temp 26))))
                      (t
                       (fuzzy-cons x 1.0)))))))
-         (example-db (fset:map
-                      (:domain
-                       (fset:set
-                        (fset:map
-                         (:id "Jane")
-                         (:gender "Female")
-                         (:children '("John")))
-                        (fset:map
-                         (:id "John")
-                         (:gender "Androgynous"))
-                        (fset:map
-                         (:id "Steve")
-                         (:gender "Male")
-                         (:children '("John")))
-                        (fset:map
-                         (:id "Malta")
-                         (:avg-temp/c 27)
-                         (:land-mass/km2 316))
-                        (fset:map
-                         (:id "Britain")
-                         (:avg-temp/c 8)
-                         (:land-mass/km2 209331))
-                        (fset:map
-                         (:id "Chad")
-                         (:avg-temp/c 27.9)
-                         (:land-mass/km2 1284000))))
-                      (:tables
-                       (list (fset:map
-                              (:title 'Crisp)
-                              (:mu crisp-mu))
-                             (fset:map
-                              (:title 'Female)
-                              (:mu female-mu))
-                             (fset:map
-                              (:title 'Parent)
-                              (:mu parent-mu))
-                             (fset:map
-                              (:title 'Big-Country)
-                              (:mu big-country-mu))
-                             (fset:map
-                              (:title 'Hot-Country)
-                              (:mu hot-country-mu)))))))
-    
-    (fiveam:is (= 6 (fset:size (fset:@ example-db :domain))))
-    (fiveam:is (= 5 (length (fset:@ example-db :tables))))
+         (example-db (make-env
+                      (fset:map
+                       (:domain
+                        (fset:set
+                         (fset:map
+                          (:id "Jane")
+                          (:gender "Female")
+                          (:children '("John")))
+                         (fset:map
+                          (:id "John")
+                          (:gender "Androgynous"))
+                         (fset:map
+                          (:id "Steve")
+                          (:gender "Male")
+                          (:children '("John")))
+                         (fset:map
+                          (:id "Malta")
+                          (:avg-temp/c 27)
+                          (:land-mass/km2 316))
+                         (fset:map
+                          (:id "Britain")
+                          (:avg-temp/c 8)
+                          (:land-mass/km2 209331))
+                         (fset:map
+                          (:id "Chad")
+                          (:avg-temp/c 27.9)
+                          (:land-mass/km2 1284000))))
+                       (:tables
+                        (list (fset:map
+                               (:title 'Crisp)
+                               (:mu crisp-mu))
+                              (fset:map
+                               (:title 'Female)
+                               (:mu female-mu))
+                              (fset:map
+                               (:title 'Parent)
+                               (:mu parent-mu))
+                              (fset:map
+                               (:title 'Big-Country)
+                               (:mu big-country-mu))
+                              (fset:map
+                               (:title 'Hot-Country)
+                               (:mu hot-country-mu))))))))
+
+    (fiveam:is (= 6 (fset:size (fset:@ (ff example-db) :domain))))
+    (fiveam:is (= 5 (length (fset:@ (ff example-db) :tables))))
+    ;; lookup
     (fiveam:is (equal crisp-mu
-                      (table-lookup 'Crisp example-db)))
+                      (table-lookup 'Crisp (ff example-db))))
+    ;; lookup
     (fiveam:is (equal female-mu
-                      (interpret-rule 'Female example-db)))
+                      (fset:@ (interpret-rule 'Female example-db) :result)))
+
+    ;; eval
+    (fiveam:is (equal 6
+                      (length
+                       (fset:convert 'list
+                                     (fset:@
+                                      (ff
+                                       (fset:@
+                                        (interpret-rule
+                                         '(mutate Crisp 0.0)
+                                         example-db)
+                                        :env))
+                                      :domain)))))
+
+    ;; and
     (fiveam:is (= 1.6
                   (scalar-cardinality
                    (evaluate-rule
                     '(and Female Crisp)
                     example-db))))
+    ;; or
     (fiveam:is (= 6.0
                   (scalar-cardinality
                    (evaluate-rule
                     '(or Female Crisp)
                     example-db))))
+    ;; and
     (fiveam:is (= 1.0
                   (scalar-cardinality
                    (evaluate-rule
                     '(and Female Parent)
                     example-db))))
+    ;; do, rule, and
     (fiveam:is (= 1.0 (scalar-cardinality
                        (evaluate-rule
                         '(do
                           (rule FemParent (and Female Parent))
                           FemParent)
                         example-db))))
+    ;; Table
+    (fiveam:is (equal
+                'test-table
+                (serapeum:~> (interpret-rule
+                              '(table test-table (lambda (x) (fuzzy-cons x 1.0)))
+                              example-db)
+                             (fset:@ :env)
+                             ff
+                             (fset:@ :tables)
+                             first
+                             (fset:@ :title))))
+    ;; Attr
+    (fiveam:is (= 3
+                  (length
+                   (fset:convert
+                    'list
+                    (strong-alpha-cut
+                     (evaluate-rule
+                      '(do (attr :gender) gender)
+                      example-db)
+                     0.0)))))
+    ;; Do
     (fiveam:is (equal
                 ""
                 (strong-alpha-cut
@@ -214,4 +257,36 @@
                      (and Hot-Country Big-Country))
                     Big-And-Hot)
                   example-db)
-                 0.0)))))
+                 0.0)))
+    ;; Delete
+    (fiveam:is (equal 0
+                      (length
+                       (fset:convert 'list
+                                     (fset:@
+                                      (ff
+                                       (fset:@
+                                        (interpret-rule
+                                         '(delete Crisp 0.0) example-db)
+                                        :env))
+                                      :domain)))))
+    ;; Strong Cut
+    (fiveam:is (equal 2
+                      (length
+                       (fset:convert 'list
+                                     (ff
+                                      (fset:@
+                                       (interpret-rule
+                                        '(eval Female)
+                                        example-db)
+                                       :env))))))
+    ;; Read & Write 1
+    (let ((filename "resources/example-db.lisp"))
+      (store-domain (ff example-db) filename)
+      (fiveam:is (equal 6
+                        (length
+                         (fset:convert 'list
+                                       (fset:@
+                                        (load-into-domain
+                                         (make-db) filename)
+                                        :domain))))))
+    ))
