@@ -14,7 +14,7 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 - Cascading
 - Error handling (let's leverage the excellent CL condition system please!)
 - Data simulations
-- Bitemporal domain data
+- Bitemporal domain handling
 
 ## Documentation
 `(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true. Entities are maps/plists
