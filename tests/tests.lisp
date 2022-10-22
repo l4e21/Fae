@@ -3,8 +3,12 @@
 (fiveam:def-suite fuzzy-suite)
 (fiveam:in-suite fuzzy-suite)
 
+
 (defun test-fuzzy-suite ()
   (fiveam:run! 'fuzzy-suite))
+
+(defun debug-fuzzy-suite ()
+  (fiveam:debug! 'fuzzy-suite))
 
 (serapeum:-> example-member-func (t) fuzzy-cons)
 (defun example-member-func (x)
@@ -201,32 +205,33 @@
                                         :env))
                                       :domain)))))
 
-    ;; and
+    ;; ;; and
     (fiveam:is (= 1.6
                   (scalar-cardinality
                    (evaluate-rule
                     '(and Female Crisp)
                     example-db))))
-    ;; or
+    ;; ;; or
     (fiveam:is (= 6.0
                   (scalar-cardinality
                    (evaluate-rule
                     '(or Female Crisp)
                     example-db))))
-    ;; and
+    ;; ;; and
     (fiveam:is (= 1.0
                   (scalar-cardinality
                    (evaluate-rule
                     '(and Female Parent)
                     example-db))))
-    ;; do, rule, and
-    (fiveam:is (= 1.0 (scalar-cardinality
-                       (evaluate-rule
-                        '(do
-                          (rule FemParent (and Female Parent))
-                          FemParent)
-                        example-db))))
-    ;; Table
+    ;; ;; ;; do, rule, and
+    (fiveam:is (= 1.0
+                  (scalar-cardinality
+                   (evaluate-rule
+                    '(do
+                      (rule FemParent (and Female Parent))
+                      FemParent)
+                    example-db))))
+    ;; ;; ;; Table
     (fiveam:is (equal
                 'test-table
                 (serapeum:~> (interpret-rule
@@ -237,7 +242,7 @@
                              (fset:@ :tables)
                              first
                              (fset:@ :title))))
-    ;; Attr
+    ;; ;; Attr
     (fiveam:is (= 3
                   (length
                    (fset:convert
@@ -247,7 +252,7 @@
                       '(do (attr :gender) gender)
                       example-db)
                      0.0)))))
-    ;; Do
+    ;; ;; Do
     (fiveam:is (equal
                 ""
                 (strong-alpha-cut
@@ -258,7 +263,7 @@
                     Big-And-Hot)
                   example-db)
                  0.0)))
-    ;; Delete
+    ;; ;; Delete
     (fiveam:is (equal 0
                       (length
                        (fset:convert 'list
@@ -269,7 +274,7 @@
                                          '(delete Crisp 0.0) example-db)
                                         :env))
                                       :domain)))))
-    ;; Strong Cut
+    ;; ;; Strong Cut
     (fiveam:is (equal 2
                       (length
                        (fset:convert 'list
@@ -279,8 +284,8 @@
                                         '(eval Female)
                                         example-db)
                                        :env))))))
-    ;; Read & Write 1
-    (let ((filename "resources/example-db.lisp"))
+    ;; ;; Read & Write 1
+    (let ((filename "../resources/example-db.lisp"))
       (store-domain (ff example-db) filename)
       (fiveam:is (equal 6
                         (length

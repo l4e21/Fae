@@ -13,6 +13,7 @@ TODO:
 - JSON loading + reading of domain data (currently supports only lisp files)
 - Cascading
 - Error handling (let's leverage the excellent CL condition system please!)
+- Data simulations
 
 ## License
 

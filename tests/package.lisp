@@ -1,3 +1,4 @@
 (defpackage :fae/test
   (:use #:cl #:fae)
-  (:export #:test-fuzzy-suite))
+  (:export #:test-fuzzy-suite
+           #:debug-fuzzy-suite))

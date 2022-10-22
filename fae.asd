@@ -11,7 +11,8 @@
                 :serial t
                 :components ((:file "package")
                              (:file "sets")
-                             (:file "db")))
+                             (:file "db")
+                             (:file "repl")))
                (:module "tests"
                 :serial t
                 :components ((:file "package")
