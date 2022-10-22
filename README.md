@@ -16,7 +16,7 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 - Data simulations
 
 ## Documentation
-`(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true.
+`(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true. Entities are maps (plists)
 
 `(load filename)` load domain data from a lisp file 
 
