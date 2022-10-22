@@ -16,7 +16,7 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 - Data simulations
 
 ## Documentation
-`(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true. Entities are maps (plists)
+`(init!)` from a REPL to hook into Fae. You'll begin with an empty domain and only one table, `t`, which is crisp & true. Entities are maps/plists
 
 `(load filename)` load domain data from a lisp file 
 
@@ -24,7 +24,7 @@ Fae is constituted by a fuzzy-set library, and a engine + query language which l
 
 `(rule name body)` is used to define new rules via combinations of tables
 
-`(table name body)` is used to define a new table programmatically (allowing you to break into Lisp to define a membership function directly). 
+`(table name body)` is used to define a new table programmatically (allowing you to break into Lisp to define a membership function directly).
 
 `(attr keyword)` makes a crisp membership function for an attribute of an entity (accessed by the relevant symbol)
 
