@@ -10,14 +10,6 @@
 ;; A membership function grades an element by membership level between 0 and 1.
 ;; We will use fsets for representation of both Crisp and Fuzzy sets.
 
-(defun range (first &optional (second nil) (step 1))
-  "Creates a list of numbers in a range"
-  (macrolet ((for (second word first)
-               `(loop :for x :from ,second ,word ,first :by step
-                      :collect x)))
-    (cond ((and second (> second first)) (for first to second))
-          (second (for first downto second))
-          (t (for 0 to first)))))
 
 (serapeum:defconstructor fuzzy-cons
   (value t)
