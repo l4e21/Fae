@@ -1,6 +1,6 @@
 ;;;; db.lisp
 
-(in-package #:fuzzy)
+(in-package #:fae)
 
 ;; A Database is a map of Domain and Tables
 ;; A Table is a map of a title, and membership function

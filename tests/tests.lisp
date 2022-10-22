@@ -1,9 +1,9 @@
-(in-package #:fuzzy)
+(in-package #:fae/test)
 
 (fiveam:def-suite fuzzy-suite)
 (fiveam:in-suite fuzzy-suite)
 
-(defun test-quasi ()
+(defun test-fuzzy-suite ()
   (fiveam:run! 'fuzzy-suite))
 
 (serapeum:-> example-member-func (t) fuzzy-cons)

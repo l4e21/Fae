@@ -1,6 +1,6 @@
 ;;;; fuzzy.lisp
 
-(in-package #:fuzzy)
+(in-package #:fae)
 
 ;; Crisp Sets have characteristic functions that map elements of X and determines
 ;; membership. For a Crisp Set, membership is determined by a boolean.
